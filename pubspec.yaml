@@ -1,0 +1,35 @@
+name: im_app
+description: 轻盈、通透的 IM 移动客户端。
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.15.0-72.0.dev
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  dio: ^5.9.0
+  web_socket_channel: ^3.0.3
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^10.0.0
+  file_picker: ^10.3.10
+  crypto: ^3.0.6
+  url_launcher: ^6.3.2
+  video_player: ^2.10.1
+  just_audio: ^0.10.5
+  record: ^6.1.2
+  path_provider: ^2.1.5
+  flutter_html: ^3.0.0
+  flutter_markdown: ^0.7.7+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
