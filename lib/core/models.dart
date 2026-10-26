@@ -20,6 +20,13 @@ String serverTime([DateTime? time]) => (time ?? DateTime.now())
     .toIso8601String()
     .substring(0, 19)
     .replaceFirst('T', ' ');
+
+// REST 使用空格分隔日期时间，WS 使用 ISO 的 T，必须解析后比较。
+int compareServerTimes(String left, String right) =>
+    (DateTime.tryParse(left)?.microsecondsSinceEpoch ?? 0).compareTo(
+      DateTime.tryParse(right)?.microsecondsSinceEpoch ?? 0,
+    );
+
 String clockText(dynamic value) {
   final date = DateTime.tryParse(str(value));
   if (date == null) return '';

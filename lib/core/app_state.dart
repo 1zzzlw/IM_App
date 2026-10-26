@@ -206,8 +206,9 @@ class AppState extends ChangeNotifier {
       messages[key] = asList(value).map((data) {
         if (number(data['sendStatus']) == 0) data['sendStatus'] = 2;
         return ChatMessage(data);
-      }).toList();
+      }).toList()..sort(_compareMessages);
     });
+    _sortConversations();
   }
 
   void _changed() {
@@ -473,14 +474,16 @@ class AppState extends ChangeNotifier {
     } else {
       list.add(message);
     }
-    list.sort((a, b) {
-      final time = a.time.compareTo(b.time);
-      return time != 0
-          ? time
-          : (BigInt.tryParse(a.id) ?? BigInt.zero).compareTo(
-              BigInt.tryParse(b.id) ?? BigInt.zero,
-            );
-    });
+    list.sort(_compareMessages);
+  }
+
+  int _compareMessages(ChatMessage a, ChatMessage b) {
+    final time = compareServerTimes(a.time, b.time);
+    return time != 0
+        ? time
+        : (BigInt.tryParse(a.id) ?? BigInt.zero).compareTo(
+            BigInt.tryParse(b.id) ?? BigInt.zero,
+          );
   }
 
   void _updatePreview(ChatMessage message, {bool incoming = false}) {
@@ -500,7 +503,7 @@ class AppState extends ChangeNotifier {
 
   void _sortConversations() => conversations.sort((a, b) {
     final pinned = (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0);
-    return pinned != 0 ? pinned : b.time.compareTo(a.time);
+    return pinned != 0 ? pinned : compareServerTimes(b.time, a.time);
   });
 
   void _onFrame(ImFrame frame) {
