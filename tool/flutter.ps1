@@ -19,8 +19,14 @@ if (-not $env:ANDROID_HOME -and (Test-Path -LiteralPath 'E:\Android\Sdk')) { $en
 if (-not $env:PUB_CACHE -and (Test-Path -LiteralPath 'E:\flutter\pub_cache')) { $env:PUB_CACHE = 'E:\flutter\pub_cache' }
 if (-not $env:GRADLE_USER_HOME -and (Test-Path -LiteralPath 'E:\Gradle')) { $env:GRADLE_USER_HOME = 'E:\Gradle' }
 $env:PUB_HOSTED_URL = 'https://mirrors.tuna.tsinghua.edu.cn/dart-pub/'
-# master SDK 的当日引擎资源在镜像中可能尚未同步，资源走官方源；Dart 包仍使用清华镜像。
-$env:FLUTTER_STORAGE_BASE_URL = 'https://storage.googleapis.com'
+# 引擎资源与引擎 maven 仓库必须走官方中国镜像：
+# 官方 storage.googleapis.com/download.flutter.io 在国内会被 TCP reset
+# （实测 curl 直连 0.26s 报 Connection reset，构建侧表现为
+#  "Could not resolve io.flutter:arm64_v8a_debug ... Connection reset"）。
+# FlutterPlugin.kt:112-118 直接用本变量拼 gradle 的 maven 地址，
+# 所以改这里同时覆盖 flutter tool 下载与 gradle 依赖解析。
+# 若某个 master 引擎版本镜像尚未同步（gradle 报 404），临时改回官方源 + 让 gradle 走代理。
+$env:FLUTTER_STORAGE_BASE_URL = 'https://storage.flutter-io.cn'
 # 开发机代理不应接管本机调试服务、Flutter 测试 VM 或本地 IM 长连接。
 $env:NO_PROXY = 'localhost,127.0.0.1,::1,10.0.2.2' + $(if ($env:NO_PROXY) { ',' + $env:NO_PROXY } else { '' })
 $env:no_proxy = $env:NO_PROXY
