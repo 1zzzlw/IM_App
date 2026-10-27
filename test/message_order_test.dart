@@ -163,4 +163,49 @@ void main() {
       ]);
     },
   );
+
+  test('message ID determines order even when sendTime disagrees', () async {
+    api.history = [
+      message('7520640156306571265', '新 ID，旧时间', '2026-10-26 10:00:00'),
+      message('7520640156306571264', '旧 ID，新时间', '2026-10-27T10:00:00'),
+    ];
+    await app.loadLatest('200_100');
+    expect(app.messages['200_100']!.map((m) => m.content), [
+      '旧 ID，新时间',
+      '新 ID，旧时间',
+    ]);
+  });
+
+  test(
+    'ACK replaces temporary ID, reorders and merges a history duplicate',
+    () async {
+      api.history = [
+        message('7520640156306571264', '已有消息', '2026-10-27 10:00:00'),
+      ];
+      await app.loadLatest('200_100');
+      final outgoing = await app.send(
+        app.conversations.single,
+        '待确认消息',
+        extra: {'id': '1001', 'sendTime': '2026-10-27 09:00:00'},
+      );
+      // REST 已返回正式 ID，但发送方的 ACK 尚未处理。
+      api.history = [
+        message('7520640156306571265', '待确认消息', '2026-10-27 09:00:00'),
+      ];
+      await app.loadLatest('200_100');
+      socket.frames.add(
+        ImFrame(16, 0, {
+          'tempId': outgoing.id,
+          'messageId': '7520640156306571265',
+          'status': 0,
+        }),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(app.messages['200_100']!.map((m) => m.id), [
+        '7520640156306571264',
+        '7520640156306571265',
+      ]);
+      expect(app.messages['200_100']!.last.status, 1);
+    },
+  );
 }

@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_client.dart';
 import 'im_protocol.dart';
 import 'im_socket.dart';
+import 'message_id.dart';
 import 'models.dart';
 import 'session_storage.dart';
 
@@ -74,7 +76,7 @@ class AppState extends ChangeNotifier {
   Future<void>? _syncing;
   Timer? _cacheTimer;
   int _sessionGeneration = 0;
-  final Random _random = Random.secure();
+  final MessageIdGenerator _messageIds = MessageIdGenerator();
   String get wsUrl => storage.preferences.getString('im.ws') ?? defaultWs;
   String get httpUrl => api.dio.options.baseUrl;
   String get cacheKey => '${Uri.encodeComponent(httpUrl)}.${user?.id ?? ''}';
@@ -85,19 +87,30 @@ class AppState extends ChangeNotifier {
     try {
       final session = await storage.readSession();
       if (session['server'] == httpUrl && session['user'] is Map) {
-        user = ImUser(asJson(session['user']));
-        api.userId = user!.id;
+        final savedUser = ImUser(asJson(session['user']));
+        api.userId = savedUser.id;
         api.accessToken = str(session['accessToken']);
         api.refreshToken = str(session['refreshToken']);
-        _restoreCache();
-        // 网络失败时保留本地会话，鉴权失败才返回登录页。
+        // 仅冷启动要求联网验证；超时取消请求，避免一直停留在启动页。
+        final cancel = CancelToken();
+        final deadline = Timer(
+          const Duration(seconds: 5),
+          () => cancel.cancel('启动登录验证超时'),
+        );
         try {
-          await api.refresh();
-        } catch (e) {
-          notice = e.toString();
-        }
-        if (user != null) {
+          await api.refresh(cancelToken: cancel);
+          user = savedUser;
+          _restoreCache();
+          await _persistSession();
           unawaited(socket.connect(wsUrl, () async => api.accessToken));
+        } catch (_) {
+          // 鉴权失败已由 onExpired 退出；网络失败也放弃本次自动登录。
+          // 验证前不恢复 user，logout 不会用空列表覆盖已有聊天缓存。
+          if (api.userId.isNotEmpty || user != null) {
+            await logout(reason: '无法验证登录状态，请联网后重新登录');
+          }
+        } finally {
+          deadline.cancel();
         }
       }
     } catch (e) {
@@ -371,11 +384,7 @@ class AppState extends ChangeNotifier {
     return conversation;
   }
 
-  String nextId() =>
-      (BigInt.from(DateTime.now().millisecondsSinceEpoch) *
-                  BigInt.from(1000000) +
-              BigInt.from(_random.nextInt(1000000)))
-          .toString();
+  String nextId() => _messageIds.next();
   Json messageBody(
     Conversation conversation,
     String content,
@@ -478,12 +487,10 @@ class AppState extends ChangeNotifier {
   }
 
   int _compareMessages(ChatMessage a, ChatMessage b) {
-    final time = compareServerTimes(a.time, b.time);
-    return time != 0
-        ? time
-        : (BigInt.tryParse(a.id) ?? BigInt.zero).compareTo(
-            BigInt.tryParse(b.id) ?? BigInt.zero,
-          );
+    // 与后端和 Electron 的 ID 分页保持一致，sendTime 只用于展示。
+    return (BigInt.tryParse(a.id) ?? BigInt.zero).compareTo(
+      BigInt.tryParse(b.id) ?? BigInt.zero,
+    );
   }
 
   void _updatePreview(ChatMessage message, {bool incoming = false}) {
@@ -564,10 +571,14 @@ class AppState extends ChangeNotifier {
         for (final list in messages.values) {
           final found = list.where((m) => m.id == temporary);
           if (found.isEmpty) continue;
-          found.first.data['sendStatus'] = number(data['status']) == 0 ? 1 : 2;
+          final message = found.first;
+          message.data['sendStatus'] = number(data['status']) == 0 ? 1 : 2;
           if (number(data['status']) == 0 &&
               str(data['messageId']).isNotEmpty) {
-            found.first.data['id'] = str(data['messageId']);
+            // 正式 ID 可能已通过历史接口到达，重新合并以去重并按 ID 排序。
+            list.remove(message);
+            message.data['id'] = str(data['messageId']);
+            _merge(message);
           }
         }
         if (number(data['status']) != 0) notice = str(data['errorCase']);

@@ -56,9 +56,10 @@ class ApiClient {
     await onTokens?.call();
   }
 
-  Future<void> refresh() =>
-      _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
-  Future<void> _refresh() async {
+  Future<void> refresh({CancelToken? cancelToken}) =>
+      _refreshing ??= _refresh(cancelToken: cancelToken)
+          .whenComplete(() => _refreshing = null);
+  Future<void> _refresh({CancelToken? cancelToken}) async {
     final account = userId;
     final credential = refreshToken;
     if (refreshToken.isEmpty || userId.isEmpty) {
@@ -68,6 +69,7 @@ class ApiClient {
     final response = await dio.post<dynamic>(
       '/user/refreshToken/$userId',
       data: {},
+      cancelToken: cancelToken,
       options: Options(headers: {'Authorization': refreshToken}),
     );
     if (account != userId || credential != refreshToken) {
