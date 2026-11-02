@@ -8,6 +8,7 @@ import '../moments/moments_page.dart';
 import '../wallet/wallet_page.dart';
 import 'favorites_page.dart';
 import 'server_page.dart';
+import 'notification_settings_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -97,6 +98,13 @@ class ProfilePage extends StatelessWidget {
           child: Column(
             children: [
               _item(context, Icons.tune_rounded, '连接设置', const ServerPage()),
+              if (AppScope.mobileOf(context) case final mobile?)
+                _item(
+                  context,
+                  Icons.notifications_none_rounded,
+                  '消息与后台接收',
+                  NotificationSettingsPage(mobile: mobile),
+                ),
               ListTile(
                 leading: const Icon(
                   Icons.cleaning_services_outlined,

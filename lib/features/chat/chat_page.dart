@@ -12,6 +12,7 @@ import 'package:record/record.dart';
 import '../../core/app_state.dart';
 import '../../core/file_service.dart';
 import '../../core/models.dart';
+import '../../core/camera_capture.dart';
 import '../../ui/components.dart';
 import '../../ui/theme.dart';
 import '../contacts/contacts_page.dart';
@@ -20,8 +21,9 @@ import '../wallet/red_packet_page.dart';
 import 'message_bubble.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key, required this.conversation});
+  const ChatPage({super.key, required this.conversation, this.initialPhoto});
   final Conversation conversation;
+  final CameraDraft? initialPhoto;
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
@@ -39,6 +41,7 @@ class _ChatPageState extends State<ChatPage> {
   bool recordBusy = false;
   bool olderBusy = false;
   bool emojiOpen = false;
+  bool cameraBusy = false;
   double? progress;
   CancelToken? upload;
   Timer? recordLimit;
@@ -58,6 +61,9 @@ class _ChatPageState extends State<ChatPage> {
       loadError = e.toString();
     } finally {
       if (mounted) setState(() => loading = false);
+    }
+    if (mounted && widget.initialPhoto != null) {
+      await previewPhoto(widget.initialPhoto!);
     }
   }
 
@@ -132,6 +138,72 @@ class _ChatPageState extends State<ChatPage> {
       }
     } finally {
       if (mounted) setState(() => progress = null);
+    }
+  }
+
+  Future<void> takePhoto() async {
+    if (cameraBusy || progress != null || recording) return;
+    final camera = AppScope.mobileOf(context)?.camera;
+    if (camera == null || app?.user == null) return;
+    setState(() => cameraBusy = true);
+    try {
+      final draft = await camera.take(
+        app!.user!.id,
+        app!.httpUrl,
+        widget.conversation.id,
+      );
+      if (draft != null && mounted) await previewPhoto(draft);
+    } on PlatformException catch (e) {
+      if (mounted) {
+        toast(
+          context,
+          e.code.contains('denied')
+              ? '请在系统设置中允许使用相机'
+              : '无法打开相机：${e.message ?? e.code}',
+        );
+      }
+    } catch (e) {
+      if (mounted) toast(context, '拍照失败：$e');
+    } finally {
+      if (mounted) setState(() => cameraBusy = false);
+    }
+  }
+
+  Future<void> previewPhoto(CameraDraft draft) async {
+    if (app?.user?.id != draft.accountId ||
+        app!.httpUrl != draft.server ||
+        draft.conversationId != widget.conversation.id) {
+      return;
+    }
+    final bytes = await draft.file.readAsBytes();
+    if (!mounted) return;
+    final send = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('发送照片'),
+        content: SizedBox(
+          width: 320,
+          height: MediaQuery.sizeOf(context).height * 0.5,
+          child: Image.memory(bytes, fit: BoxFit.contain),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('发送'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    await AppScope.mobileOf(context)?.camera.clear();
+    if (send == true) {
+      await sendFile(
+        PlatformFile(name: draft.file.name, size: bytes.length, bytes: bytes),
+      );
     }
   }
 
@@ -582,6 +654,18 @@ class _ChatPageState extends State<ChatPage> {
                             size: 23,
                           ),
                         ),
+                        if (AppScope.mobileOf(context)?.android == true)
+                          IconButton(
+                            tooltip: '拍照',
+                            onPressed:
+                                progress == null && !cameraBusy && !recording
+                                ? takePhoto
+                                : null,
+                            icon: const Icon(
+                              Icons.photo_camera_outlined,
+                              size: 23,
+                            ),
+                          ),
                         IconButton(
                           tooltip: '发送图片',
                           onPressed: progress == null

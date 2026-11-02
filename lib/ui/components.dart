@@ -3,11 +3,19 @@ import 'dart:ui';
 import 'package:material_ui/material_ui.dart';
 
 import '../core/app_state.dart';
+import '../core/mobile_services.dart';
 import 'theme.dart';
 
 class AppScope extends InheritedNotifier<AppState> {
-  const AppScope({super.key, required AppState state, required super.child})
-    : super(notifier: state);
+  const AppScope({
+    super.key,
+    required AppState state,
+    this.mobile,
+    required super.child,
+  }) : super(notifier: state);
+  final MobileServices? mobile;
+  static MobileServices? mobileOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AppScope>()?.mobile;
   static AppState of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
 }

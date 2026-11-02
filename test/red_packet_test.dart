@@ -69,8 +69,9 @@ void main() {
       await tester.tap(find.text('确认'));
       await tester.pumpAndSettle();
       expect(api.payments.single['totalAmount'], '2.30');
-      expect(socket.sent.single.$2['id'], api.payments.single['messageId']);
-      expect(socket.sent.single.$2['redPacketId'], 'packet');
+      final announced = socket.sent.where((frame) => frame.$1 == 1).single.$2;
+      expect(announced['id'], api.payments.single['messageId']);
+      expect(announced['redPacketId'], 'packet');
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await app.logout();

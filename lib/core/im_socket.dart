@@ -15,6 +15,9 @@ class ImSocket {
   StreamSubscription<dynamic>? _subscription;
   Timer? _heartbeat;
   Timer? _retry;
+  DateTime _lastReceivedAt = DateTime.now();
+  bool _presenceQueued = false;
+  bool _presencePending = false;
   int _generation = 0;
   int _attempt = 0;
   bool _stopped = true;
@@ -61,7 +64,10 @@ class ImSocket {
           if (generation != _generation) return;
           try {
             if (raw is List<int>) {
-              frames.add(ImProtocol.decode(raw));
+              final frame = ImProtocol.decode(raw);
+              _lastReceivedAt = DateTime.now();
+              if (frame.type == 10) _presencePending = false;
+              if (frame.type != 0) frames.add(frame);
             }
           } on FormatException catch (e) {
             frames.addError(e);
@@ -73,11 +79,18 @@ class ImSocket {
       await channel.ready.timeout(const Duration(seconds: 15));
       if (generation != _generation || _stopped) return;
       _attempt = 0;
+      _lastReceivedAt = DateTime.now();
       _set(ConnectionState.online);
-      _heartbeat = Timer.periodic(
-        const Duration(seconds: 30),
-        (_) => send(0, {'action': 'heartbeat'}),
-      );
+      send(0, {});
+      if (_presenceQueued) requestPresence();
+      _heartbeat = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (DateTime.now().difference(_lastReceivedAt) >=
+            const Duration(seconds: 90)) {
+          _lost(generation);
+          return;
+        }
+        send(0, {});
+      });
     } catch (_) {
       _lost(generation);
     }
@@ -86,6 +99,7 @@ class ImSocket {
   void _lost(int generation) {
     if (generation != _generation || _stopped) return;
     ++_generation;
+    _presencePending = false;
     _heartbeat?.cancel();
     _subscription?.cancel();
     _channel?.sink.close();
@@ -104,8 +118,20 @@ class ImSocket {
     _channel!.sink.add(ImProtocol.encode(type, 0, body));
   }
 
+  /// 联系人同步后按需获取在线列表，合并尚未完成的请求。
+  void requestPresence() {
+    if (_presencePending) return;
+    _presenceQueued = true;
+    if (state != ConnectionState.online) return;
+    _presenceQueued = false;
+    _presencePending = true;
+    send(19, {});
+  }
+
   void disconnect() {
     _stopped = true;
+    _presenceQueued = false;
+    _presencePending = false;
     ++_generation;
     _heartbeat?.cancel();
     _retry?.cancel();

@@ -42,7 +42,7 @@ void main() {
     expect(app.conversations.single.id, '200_100');
     final message = await app.send(app.conversations.single, '测试消息');
     expect(message.status, 0);
-    expect(socket.sent.single.$1, 1);
+    expect(socket.sent.last.$1, 1);
     socket.frames.add(
       ImFrame(16, 0, {
         'tempId': message.id,

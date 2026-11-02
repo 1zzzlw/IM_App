@@ -9,6 +9,7 @@ import 'api_client.dart';
 import 'im_protocol.dart';
 import 'im_socket.dart';
 import 'message_id.dart';
+import 'message_alert.dart';
 import 'models.dart';
 import 'session_storage.dart';
 
@@ -30,6 +31,7 @@ class AppState extends ChangeNotifier {
       },
     );
     _states = socket.states.stream.listen((value) {
+      if (value != ConnectionState.online) onlineUsers.clear();
       notifyListeners();
       if (value == ConnectionState.online && user != null) {
         unawaited(
@@ -68,6 +70,9 @@ class AppState extends ChangeNotifier {
   final Map<String, List<ChatMessage>> messages = {};
   final Map<String, List<Json>> members = {};
   final Set<String> onlineUsers = {};
+  final messageAlerts = StreamController<MessageAlert>.broadcast();
+  bool inForeground = true;
+  Future<void> Function()? beforeLogout;
   final Map<String, Timer> _pending = {};
   String? activeConversation;
   String? notice;
@@ -185,6 +190,11 @@ class AppState extends ChangeNotifier {
   Future<void> logout({String? reason}) async {
     ++_sessionGeneration;
     socket.disconnect();
+    try {
+      await beforeLogout?.call();
+    } catch (error) {
+      debugPrint('清理消息通知失败：$error');
+    }
     _cacheTimer?.cancel();
     await _saveCache();
     for (final timer in _pending.values) {
@@ -275,6 +285,7 @@ class AppState extends ChangeNotifier {
         }
       }
       contacts = asList(result[1]).map(Contact.new).toList();
+      socket.requestPresence();
       _sortConversations();
       if (conversations.isNotEmpty) {
         // 每批 20 个会话，避免 GET 路径过长；合并到缓存而不是覆盖实时消息。
@@ -500,7 +511,7 @@ class AppState extends ChangeNotifier {
       c.data['latestMsg'] = message.displayText;
       c.data['latestMsgTime'] = message.time;
       if (incoming &&
-          activeConversation != c.id &&
+          (!inForeground || activeConversation != c.id) &&
           message.senderId != user?.id) {
         c.data['unreadCount'] = c.unread + 1;
       }
@@ -549,7 +560,28 @@ class AppState extends ChangeNotifier {
         }
         _merge(message);
         if (!exists) _updatePreview(message, incoming: true);
-        if (activeConversation == message.conversationId) {
+        final conversation = conversations
+            .where((c) => c.id == message.conversationId)
+            .firstOrNull;
+        if (!exists &&
+            frame.type != 13 &&
+            message.senderId != user!.id &&
+            conversation?.muted != true &&
+            !(inForeground && activeConversation == message.conversationId)) {
+          final contact = contacts
+              .where((c) => c.id == message.senderId)
+              .firstOrNull;
+          messageAlerts.add(
+            MessageAlert(
+              accountId: user!.id,
+              conversationId: message.conversationId,
+              messageId: message.id,
+              title: conversation?.name ?? contact?.name ?? '新消息',
+              body: message.displayText,
+            ),
+          );
+        }
+        if (inForeground && activeConversation == message.conversationId) {
           unawaited(
             api
                 .put('/conversation/isReaded/${message.conversationId}')
@@ -677,6 +709,7 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
+    messageAlerts.close();
     _cacheTimer?.cancel();
     for (final timer in _pending.values) {
       timer.cancel();

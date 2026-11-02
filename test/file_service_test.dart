@@ -75,8 +75,9 @@ void main() {
     expect(Map.fromEntries(chunk.fields)['chunkIndex'], '1');
     expect(chunk.files.single.value.length, 3);
     final saved = asJson(api.calls[2].$2);
-    expect(socket.sent.single.$2['id'], saved['id']);
-    expect(socket.sent.single.$2['remoteUrl'], 'http://test.invalid/file');
+    final announced = socket.sent.where((frame) => frame.$1 == 1).single.$2;
+    expect(announced['id'], saved['id']);
+    expect(announced['remoteUrl'], 'http://test.invalid/file');
     expect(completed, 1);
     await app.logout();
     app.dispose();

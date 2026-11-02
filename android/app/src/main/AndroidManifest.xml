@@ -1,12 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <application
         android:label="轻聊"
         android:usesCleartextTraffic="true"
         android:allowBackup="false"
-        android:name="${applicationName}"
+        android:name=".ImApplication"
         android:icon="@mipmap/ic_launcher">
+        <service android:name=".ChatConnectionService" android:exported="false"
+            android:stopWithTask="false" android:foregroundServiceType="remoteMessaging" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
