@@ -51,17 +51,7 @@ class MessageBubble extends StatelessWidget {
             borderRadius: BorderRadius.circular(13),
             child: message.url.isEmpty
                 ? const Text('图片尚未上传完成')
-                : Image.network(
-                    message.url,
-                    width: 210,
-                    height: 180,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, error, stack) => const SizedBox(
-                      width: 180,
-                      height: 100,
-                      child: Center(child: Icon(Icons.broken_image_outlined)),
-                    ),
-                  ),
+                : MessageMediaPreview(url: message.url, video: false),
           ),
         );
         break;
@@ -70,26 +60,9 @@ class MessageBubble extends StatelessWidget {
           onTap: message.url.isEmpty
               ? null
               : () => pushPage(context, VideoPreviewPage(url: message.url)),
-          child: SizedBox(
-            width: 190,
-            height: 100,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.play_circle_outline_rounded,
-                  size: 38,
-                  color: foreground,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  message.fileName.isEmpty ? '视频消息' : message.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: foreground),
-                ),
-              ],
-            ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(13),
+            child: MessageMediaPreview(url: message.url, video: true),
           ),
         );
         break;

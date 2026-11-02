@@ -13,7 +13,14 @@ class ImFrame {
 /// 与 Netty / Electron 一致的 16 字节大端帧头。
 class ImProtocol {
   static Uint8List encode(int type, int sequence, Json data) {
-    final body = utf8.encode(jsonEncode(data));
+    // 旧缓存重发同样只发送文件元数据，不重新传输内嵌预览内容。
+    final metadata = Map<String, dynamic>.from(data)
+      ..remove('previewBase64')
+      ..remove('preview_base64')
+      ..remove('base64')
+      ..remove('previewUrl')
+      ..remove('previewPath');
+    final body = utf8.encode(jsonEncode(metadata));
     final bytes = Uint8List(16 + body.length);
     bytes.setAll(0, [1, 2, 3, 4, 1, 0, type]);
     final header = ByteData.sublistView(bytes);

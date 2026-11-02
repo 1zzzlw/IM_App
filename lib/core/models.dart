@@ -76,7 +76,12 @@ class Contact {
 }
 
 class ChatMessage {
-  ChatMessage(this.data);
+  ChatMessage(this.data) {
+    // 恢复旧缓存时也丢弃内嵌预览，后续保存不会再把它写回本地缓存。
+    data.remove('previewBase64');
+    data.remove('preview_base64');
+    data.remove('base64');
+  }
   final Json data;
   String get id => str(data['id']);
   String get conversationId => str(data['conversationId']);
@@ -85,6 +90,8 @@ class ChatMessage {
   int get status => number(data['sendStatus']);
   String get content => str(data['content']);
   String get url => str(data['remoteUrl']);
+  String get previewUrl => (type == 2 || type == 3) && url.isNotEmpty
+      ? '$url.preview' : '';
   String get fileName => str(data['fileName']);
   String get time => str(data['sendTime'] ?? data['receiveTime']);
   bool get revoked => flag(data['isRevoked']);

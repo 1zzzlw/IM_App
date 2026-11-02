@@ -4,9 +4,11 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
 import 'app_state.dart';
 import 'models.dart';
+import 'media_preview.dart';
 
 /// 复用桌面端的 5 MiB 分片、MD5 校验、上传凭证与合并接口。
 class FileService {
@@ -26,10 +28,26 @@ class FileService {
     if (bytes == null || bytes.isEmpty) throw Exception('文件为空或无法读取');
     if (bytes.length > 50 * 1024 * 1024) throw Exception('移动端暂支持 50 MB 以内的文件');
     final type = fileType(file.name);
+    final preview = type == 2 || type == 3
+        ? await MediaPreview.create(bytes, type, kIsWeb ? null : file.path)
+        : null;
+    if (app.user?.id != generationUser) throw Exception('登录状态已变化，上传已停止');
+    if (cancelToken?.isCancelled ?? false) throw Exception('上传已取消');
     final fileId = md5.convert(bytes).toString();
     final ticket = asJson(
       await app.api.get('/message/verifyUploadToken/$fileId'),
     );
+    if (preview != null) {
+      app.api.unwrap(await app.api.response(
+        'POST', '/message/uploadPreview', cancelToken: cancelToken,
+        data: FormData.fromMap({
+          'preview': MultipartFile.fromBytes(preview, filename: type == 2 ? 'preview.png' : 'preview.jpg'),
+          'fileId': fileId,
+          'verify': ticket['verify'],
+          'fileType': type,
+        }),
+      ));
+    }
     final uploaded = await app.api.get(
       '/message/checkUploaded',
       query: {'verify': ticket['verify'], 'fileId': fileId},

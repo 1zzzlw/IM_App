@@ -9,6 +9,8 @@
 
 Android 模拟器默认连接 `10.0.2.2`，桌面端与 Web 默认连接 `127.0.0.1`，HTTP 使用 81 端口、WS 使用 80 端口。真机可在登录页右上角配置电脑局域网地址。已保存的设置优先；连接设置提供“使用当前平台默认地址”按钮。
 
+图片与视频封面使用 HTTP 独立上传，聊天 WS 不传 Base64。Android/iOS 视频首帧通过系统媒体 API 提取，包含原生代码更新，需重新打包安装。Flutter Windows 同样生成真实封面：使用 PATH 中的 `ffmpeg.exe`，或放在应用程序目录中的 `ffmpeg.exe`；Chrome/Web 和其他桌面平台仍使用通用视频封面。三端部署及数据库说明见工作区后端的 `docs/媒体消息去除Base64.md`。本轮未运行测试或构建，无新增 Dart 依赖。
+
 ```powershell
 .\tool\flutter.ps1 analyze
 .\tool\flutter.ps1 test --no-pub

@@ -6,6 +6,42 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../ui/components.dart';
 import '../../ui/theme.dart';
 
+/// 聊天内只加载小预览，点击后的大图/视频仍使用原文件地址。
+class MessageMediaPreview extends StatelessWidget {
+  const MessageMediaPreview({super.key, required this.url, required this.video});
+  final String url;
+  final bool video;
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = Center(child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(video ? Icons.movie_outlined : Icons.broken_image_outlined, size: 30),
+      const SizedBox(height: 8),
+      Text(video ? '视频 · 点击播放' : '图片加载失败'),
+    ],
+    ));
+    if (url.isEmpty) return SizedBox(width: 210, height: 170, child: placeholder);
+    final source = '$url.preview';
+    return SizedBox(
+      width: 210, height: 170,
+      child: Stack(fit: StackFit.expand, children: [
+        Image.network(source, fit: BoxFit.cover,
+          loadingBuilder: (_, child, progress) => progress == null ? child
+              : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          errorBuilder: (_, error, stack) {
+            // 旧图片没有预览对象时回退原图；视频不自动下载原文件。
+            if (video) return placeholder;
+            return Image.network(url, fit: BoxFit.cover,
+              errorBuilder: (_, error, stack) => placeholder);
+          },
+        ),
+        if (video) const Center(child: Icon(Icons.play_circle_fill_rounded, size: 42, color: Colors.white)),
+      ]),
+    );
+  }
+}
+
 Future<void> openLink(BuildContext context, String url) async {
   final uri = Uri.tryParse(url);
   if (uri == null || !['http', 'https'].contains(uri.scheme)) return;

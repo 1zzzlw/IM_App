@@ -10,6 +10,7 @@ class ImApplication : Application() {
     val chatEngine: FlutterEngine by lazy {
         FlutterEngine(this).also {
             bridge = MobileBridge(this, it.dartExecutor.binaryMessenger)
+            MediaPreviewBridge(it.dartExecutor.binaryMessenger)
             it.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
         }
     }
