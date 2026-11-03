@@ -4,12 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:im_app/app.dart';
-import 'package:im_app/core/api_client.dart';
-import 'package:im_app/core/app_state.dart';
-import 'package:im_app/core/models.dart';
-import 'package:im_app/features/auth/login_page.dart';
-import 'package:im_app/features/home/home_page.dart';
+import 'package:lumina_agent/app.dart';
+import 'package:lumina_agent/core/api_client.dart';
+import 'package:lumina_agent/core/app_state.dart';
+import 'package:lumina_agent/core/models.dart';
+import 'package:lumina_agent/features/auth/login_page.dart';
+import 'package:lumina_agent/features/home/home_page.dart';
 
 import 'support.dart';
 

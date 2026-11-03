@@ -1,4 +1,6 @@
-# 轻聊 · Flutter IM 客户端
+# Lumina · 微光 — Flutter 客户端
+
+属于 Lumina-Agent 全栈项目。不刺眼，但足够温暖。
 
 基于工作区现有 Electron 客户端及 Java IM 服务开发，浅蓝毛玻璃界面，提供消息、联系人、动态、收藏笔记、钱包红包和 AI 对话。
 
@@ -24,3 +26,7 @@ Android 模拟器默认连接 `10.0.2.2`，桌面端与 Web 默认连接 `127.0.
 App 消息 ID 已对齐 Electron 的 Snowflake 格式，消息列表按大整数 ID 排序。原因、WS 精度验证及旧数据边界见 [消息 ID 统一与排序修复](docs/2026-10-27-消息ID统一与排序修复.md)。
 
 冷启动会联网验证已保存的登录状态，失败或超过 5 秒则返回登录页；使用中断网及进程仍在时切回前台保留登录状态。详见 [启动登录与断网处理](docs/2026-10-27-启动登录与断网处理.md)。
+
+发行名称统一为 Lumina（微光）。Android 的桌面名称为“微光”，正式构建同时在 `build/lumina/` 导出 `Lumina-release.apk`（拆分架构时带对应架构后缀）；Windows 可执行文件为 `Lumina.exe`。应用标识和存储键保留，已有登录信息继续可用。
+
+Android 已关闭会导致 Windows 原生插件编译失败的 Kotlin 增量缓存，并使用进程内编译；标准 `tool/flutter.ps1 build apk --release --no-pub` 命令与发行包验证保持一致。

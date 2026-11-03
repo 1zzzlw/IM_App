@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:im_app/core/app_state.dart';
-import 'package:im_app/core/im_protocol.dart';
-import 'package:im_app/core/im_socket.dart' as im;
+import 'package:lumina_agent/core/app_state.dart';
+import 'package:lumina_agent/core/im_protocol.dart';
+import 'package:lumina_agent/core/im_socket.dart' as im;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support.dart';

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:im_app/core/api_client.dart';
-import 'package:im_app/core/im_protocol.dart';
-import 'package:im_app/features/wallet/wallet_page.dart' show validAmount;
+import 'package:lumina_agent/core/api_client.dart';
+import 'package:lumina_agent/core/im_protocol.dart';
+import 'package:lumina_agent/features/wallet/wallet_page.dart' show validAmount;
 
 void main() {
   test(

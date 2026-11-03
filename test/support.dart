@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:im_app/core/api_client.dart';
-import 'package:im_app/core/im_socket.dart';
-import 'package:im_app/core/models.dart';
-import 'package:im_app/core/session_storage.dart';
+import 'package:lumina_agent/core/api_client.dart';
+import 'package:lumina_agent/core/im_socket.dart';
+import 'package:lumina_agent/core/models.dart';
+import 'package:lumina_agent/core/session_storage.dart';
 
 class MemoryStorage extends SessionStorage {
   MemoryStorage(super.preferences);

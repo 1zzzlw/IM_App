@@ -27,7 +27,7 @@ class ChatConnectionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         @Suppress("DEPRECATION")
         val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, "im_connection") else Notification.Builder(this)
-        val notification = builder.setSmallIcon(R.drawable.ic_stat_chat).setContentTitle("轻聊正在后台接收消息")
+        val notification = builder.setSmallIcon(R.drawable.ic_stat_chat).setContentTitle("微光正在后台接收消息")
             .setContentText("点击返回聊天，可在消息通知设置中关闭后台保活")
             .setContentIntent(open).setOngoing(true).setCategory(Notification.CATEGORY_SERVICE).build()
         if (Build.VERSION.SDK_INT >= 34) startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING)

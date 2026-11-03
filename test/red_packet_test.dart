@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:im_app/core/app_state.dart';
-import 'package:im_app/core/models.dart';
-import 'package:im_app/features/wallet/red_packet_page.dart';
-import 'package:im_app/ui/components.dart';
-import 'package:im_app/ui/theme.dart';
+import 'package:lumina_agent/core/app_state.dart';
+import 'package:lumina_agent/core/models.dart';
+import 'package:lumina_agent/features/wallet/red_packet_page.dart';
+import 'package:lumina_agent/ui/components.dart';
+import 'package:lumina_agent/ui/theme.dart';
 
 import 'support.dart';
 

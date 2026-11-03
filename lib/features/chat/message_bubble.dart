@@ -138,7 +138,7 @@ class MessageBubble extends StatelessWidget {
                 Container(height: 1, color: Colors.white24),
                 const SizedBox(height: 8),
                 const Text(
-                  '轻聊红包',
+                  '微光红包',
                   style: TextStyle(color: Colors.white70, fontSize: 11),
                 ),
               ],

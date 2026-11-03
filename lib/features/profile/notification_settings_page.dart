@@ -63,7 +63,7 @@ class NotificationSettingsPage extends StatelessWidget {
                 ),
                 ListTile(
                   title: const Text('后台与省电设置'),
-                  subtitle: const Text('若锁屏后收不到消息，可允许轻聊在后台运行'),
+                  subtitle: const Text('若锁屏后收不到消息，可允许微光在后台运行'),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () =>
                       MobileServices.channel.invokeMethod('batterySettings'),

@@ -130,14 +130,14 @@ class ProfilePage extends StatelessWidget {
                   Icons.info_outline_rounded,
                   color: AppColors.muted,
                 ),
-                title: const Text('关于轻聊'),
+                title: const Text('关于微光'),
                 trailing: const Text(
                   '1.0.0',
                   style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 onTap: () => showAboutDialog(
                   context: context,
-                  applicationName: '轻聊',
+                  applicationName: 'Lumina · 微光',
                   applicationVersion: '1.0.0',
                   applicationIcon: Image.asset(
                     'assets/branding/app_icon.png',

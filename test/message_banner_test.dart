@@ -1,10 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:im_app/app.dart';
-import 'package:im_app/core/app_state.dart';
-import 'package:im_app/core/message_alert.dart';
-import 'package:im_app/core/mobile_services.dart';
-import 'package:im_app/core/models.dart';
+import 'package:lumina_agent/app.dart';
+import 'package:lumina_agent/core/app_state.dart';
+import 'package:lumina_agent/core/message_alert.dart';
+import 'package:lumina_agent/core/mobile_services.dart';
+import 'package:lumina_agent/core/models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support.dart';

@@ -47,3 +47,13 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// Flutter 默认 APK 保持工具约定，同时导出使用产品名称的发行文件。
+listOf("Debug", "Release").forEach { variant ->
+    val exportLuminaApk = tasks.register<Copy>("exportLumina${variant}Apk") {
+        from(layout.buildDirectory.dir("outputs/apk/${variant.lowercase()}")) { include("*.apk") }
+        into(rootProject.layout.buildDirectory.dir("lumina"))
+        rename { fileName -> fileName.replace("app-", "Lumina-") }
+    }
+    tasks.matching { it.name == "assemble$variant" }.configureEach { finalizedBy(exportLuminaApk) }
+}

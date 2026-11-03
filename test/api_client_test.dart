@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:im_app/core/api_client.dart';
+import 'package:lumina_agent/core/api_client.dart';
 
 import 'support.dart';
 

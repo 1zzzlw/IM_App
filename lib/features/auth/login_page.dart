@@ -120,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                           'assets/branding/app_icon.png',
                           width: 48,
                           height: 48,
-                          semanticLabel: '轻聊',
+                          semanticLabel: '微光',
                         ),
                       ),
                       const SizedBox(height: 28),

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>轻聊</string>
+	<string>微光</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>用于录制并发送聊天语音消息</string>
 	<key>NSAppTransportSecurity</key>
@@ -22,7 +22,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>im_app</string>
+	<string>Lumina</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

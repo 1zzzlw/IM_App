@@ -4,9 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:im_app/core/app_state.dart';
-import 'package:im_app/core/file_service.dart';
-import 'package:im_app/core/models.dart';
+import 'package:lumina_agent/core/app_state.dart';
+import 'package:lumina_agent/core/file_service.dart';
+import 'package:lumina_agent/core/models.dart';
 
 import 'support.dart';
 

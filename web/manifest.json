@@ -1,11 +1,11 @@
 {
-    "name": "轻聊",
-    "short_name": "轻聊",
+    "name": "Lumina · 微光",
+    "short_name": "微光",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F2F4FC",
     "theme_color": "#ECF2FF",
-    "description": "轻聊，连接生活中的美好。",
+    "description": "不刺眼，但足够温暖。",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

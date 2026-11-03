@@ -212,7 +212,7 @@ class _ImAppState extends State<ImApp> with WidgetsBindingObserver {
     state: widget.state,
     mobile: widget.mobile,
     child: MaterialApp(
-      title: '轻聊',
+      title: 'Lumina · 微光',
       debugShowCheckedModeBanner: false,
       theme: appTheme(),
       navigatorKey: navigator,

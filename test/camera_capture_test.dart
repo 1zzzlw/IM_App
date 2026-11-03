@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:im_app/core/camera_capture.dart';
+import 'package:lumina_agent/core/camera_capture.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TestPicker extends ImagePicker {

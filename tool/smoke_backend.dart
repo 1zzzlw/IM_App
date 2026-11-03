@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:im_app/core/api_client.dart';
-import 'package:im_app/core/im_socket.dart';
-import 'package:im_app/core/models.dart';
+import 'package:lumina_agent/core/api_client.dart';
+import 'package:lumina_agent/core/im_socket.dart';
+import 'package:lumina_agent/core/models.dart';
 
 /// 使用临时环境变量传入凭据，仅验证真实读接口和握手，不打印响应、Token 或个人信息。
 Future<void> main() async {
