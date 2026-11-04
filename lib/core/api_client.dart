@@ -85,9 +85,18 @@ class ApiClient {
 
   dynamic unwrap(Response<dynamic> response) {
     if ((response.statusCode ?? 500) >= 400) {
+      final payload = asJson(response.data);
+      final detail = payload['detail'];
+      final detailMessage = detail is String
+          ? detail
+          : detail is Map
+          ? str(detail['message'])
+          : '';
       throw ApiException(
-        str(asJson(response.data)['msg']).isNotEmpty
-            ? str(asJson(response.data)['msg'])
+        str(payload['msg']).isNotEmpty
+            ? str(payload['msg'])
+            : detailMessage.isNotEmpty
+            ? detailMessage
             : '服务请求失败（${response.statusCode}）',
         response.statusCode,
       );
