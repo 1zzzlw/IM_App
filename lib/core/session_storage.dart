@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +12,20 @@ class SessionStorage {
     : secure = secure ?? const FlutterSecureStorage();
   final SharedPreferences preferences;
   final FlutterSecureStorage secure;
+
+  Future<String> deviceId() async {
+    const key = 'im.deviceId';
+    final saved = preferences.getString(key);
+    if (saved != null && saved.isNotEmpty) return saved;
+    final random = Random.secure();
+    final hex = List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+    final id = 'app_$hex';
+    await preferences.setString(key, id);
+    return id;
+  }
 
   Future<Json> readSession() async {
     final raw = await secure.read(key: 'im.session');

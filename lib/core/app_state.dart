@@ -73,6 +73,7 @@ class AppState extends ChangeNotifier {
   final messageAlerts = StreamController<MessageAlert>.broadcast();
   bool inForeground = true;
   Future<void> Function()? beforeLogout;
+  bool _loggingOut = false;
   final Map<String, Timer> _pending = {};
   String? activeConversation;
   String? notice;
@@ -90,6 +91,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> initialize() async {
     try {
+      api.deviceId = await storage.deviceId();
       final session = await storage.readSession();
       if (session['server'] == httpUrl && session['user'] is Map) {
         final savedUser = ImUser(asJson(session['user']));
@@ -144,6 +146,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> login(String account, String password, String captcha) async {
+    api.deviceId = await storage.deviceId();
     final result = await api.response(
       'POST',
       '/user/login',
@@ -188,34 +191,47 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> logout({String? reason}) async {
-    ++_sessionGeneration;
-    socket.disconnect();
+    if (_loggingOut) return;
+    _loggingOut = true;
     try {
-      await beforeLogout?.call();
-    } catch (error) {
-      debugPrint('清理消息通知失败：$error');
+      ++_sessionGeneration;
+      socket.disconnect();
+      if (reason == null && user != null) {
+        try {
+          await api.revokeSession();
+        } catch (error) {
+          debugPrint('服务端会话撤销失败：$error');
+        }
+      }
+      try {
+        await beforeLogout?.call();
+      } catch (error) {
+        debugPrint('清理消息通知失败：$error');
+      }
+      _cacheTimer?.cancel();
+      await _saveCache();
+      for (final timer in _pending.values) {
+        timer.cancel();
+      }
+      _pending.clear();
+      _syncing = null;
+      syncing = false;
+      user = null;
+      api.userId = '';
+      api.accessToken = '';
+      api.refreshToken = '';
+      conversations = [];
+      contacts = [];
+      messages.clear();
+      members.clear();
+      onlineUsers.clear();
+      activeConversation = null;
+      notice = reason;
+      await storage.clearSession();
+      notifyListeners();
+    } finally {
+      _loggingOut = false;
     }
-    _cacheTimer?.cancel();
-    await _saveCache();
-    for (final timer in _pending.values) {
-      timer.cancel();
-    }
-    _pending.clear();
-    _syncing = null;
-    syncing = false;
-    user = null;
-    api.userId = '';
-    api.accessToken = '';
-    api.refreshToken = '';
-    conversations = [];
-    contacts = [];
-    messages.clear();
-    members.clear();
-    onlineUsers.clear();
-    activeConversation = null;
-    notice = reason;
-    await storage.clearSession();
-    notifyListeners();
   }
 
   void _restoreCache() {

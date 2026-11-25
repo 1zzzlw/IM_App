@@ -30,9 +30,11 @@ class ApiClient {
   String accessToken = '';
   String refreshToken = '';
   String userId = '';
+  String deviceId = '';
   Future<void> Function()? onTokens;
   Future<void> Function()? onExpired;
   Future<void>? _refreshing;
+  bool _revoking = false;
 
   // 网关 auth.refreshPaths 明确要求 RefreshToken；其余业务接口使用 AccessToken。
   static bool usesRefreshToken(String path) =>
@@ -56,27 +58,59 @@ class ApiClient {
     await onTokens?.call();
   }
 
-  Future<void> refresh({CancelToken? cancelToken}) =>
-      _refreshing ??= _refresh(cancelToken: cancelToken)
-          .whenComplete(() => _refreshing = null);
+  Future<void> refresh({CancelToken? cancelToken}) {
+    if (_revoking) return Future.error(ApiException('正在退出登录'));
+    return _refreshing ??= _refresh(cancelToken: cancelToken)
+        .whenComplete(() => _refreshing = null);
+  }
+
+  Future<void> revokeSession() async {
+    _revoking = true;
+    try {
+      try {
+        await _refreshing;
+      } catch (_) {
+        // 刷新失败后，原凭据仍可能有效。
+      }
+      final credential = refreshToken;
+      if (credential.isEmpty) return;
+      final response = await dio
+          .post<dynamic>(
+            '/user/logout',
+            options: Options(headers: {'Authorization': credential}),
+          )
+          .timeout(const Duration(seconds: 4));
+      if (response.statusCode != 400 && response.statusCode != 401) {
+        unwrap(response);
+      }
+    } finally {
+      _revoking = false;
+    }
+  }
+
   Future<void> _refresh({CancelToken? cancelToken}) async {
     final account = userId;
     final credential = refreshToken;
     if (refreshToken.isEmpty || userId.isEmpty) {
-      await onExpired?.call();
+      if (!_revoking) await onExpired?.call();
       throw ApiException('登录已过期，请重新登录', 401);
     }
     final response = await dio.post<dynamic>(
       '/user/refreshToken/$userId',
       data: {},
       cancelToken: cancelToken,
-      options: Options(headers: {'Authorization': refreshToken}),
+      options: Options(
+        headers: {
+          'Authorization': credential,
+          if (deviceId.isNotEmpty) 'X-Device-Id': deviceId,
+        },
+      ),
     );
     if (account != userId || credential != refreshToken) {
       throw ApiException('登录状态已变化，请重试');
     }
     if (response.statusCode == 400 || response.statusCode == 401) {
-      await onExpired?.call();
+      if (!_revoking) await onExpired?.call();
       throw ApiException('登录已过期，请重新登录', 401);
     }
     unwrap(response);
@@ -133,13 +167,14 @@ class ApiClient {
         options: Options(
           method: method,
           responseType: type,
-          headers: authenticated && accessToken.isNotEmpty
-              ? {
-                  'Authorization': usesRefreshToken(path)
-                      ? refreshToken
-                      : accessToken,
-                }
-              : {},
+          headers: {
+            if (authenticated && accessToken.isNotEmpty)
+              'Authorization': usesRefreshToken(path)
+                  ? refreshToken
+                  : accessToken,
+            if (path == '/user/login' && deviceId.isNotEmpty)
+              'X-Device-Id': deviceId,
+          },
         ),
       );
       var result = await perform();
@@ -154,7 +189,7 @@ class ApiClient {
           throw ApiException('请求所属账号已变化');
         }
         if (result.statusCode == 401) {
-          await onExpired?.call();
+          if (!_revoking) await onExpired?.call();
           throw ApiException('登录已过期，请重新登录', 401);
         }
       }
