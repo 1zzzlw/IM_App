@@ -31,7 +31,10 @@ class AppState extends ChangeNotifier {
       },
     );
     _states = socket.states.stream.listen((value) {
-      if (value != ConnectionState.online) onlineUsers.clear();
+      if (value != ConnectionState.online) {
+        onlineUsers.clear();
+        desktopOnline = false;
+      }
       notifyListeners();
       if (value == ConnectionState.online && user != null) {
         unawaited(
@@ -70,6 +73,7 @@ class AppState extends ChangeNotifier {
   final Map<String, List<ChatMessage>> messages = {};
   final Map<String, List<Json>> members = {};
   final Set<String> onlineUsers = {};
+  bool desktopOnline = false;
   final messageAlerts = StreamController<MessageAlert>.broadcast();
   bool inForeground = true;
   Future<void> Function()? beforeLogout;
@@ -225,6 +229,7 @@ class AppState extends ChangeNotifier {
       messages.clear();
       members.clear();
       onlineUsers.clear();
+      desktopOnline = false;
       activeConversation = null;
       notice = reason;
       await storage.clearSession();
@@ -642,6 +647,13 @@ class AppState extends ChangeNotifier {
       case 11:
         onlineUsers.remove(str(data['userId']));
         break;
+      case 20:
+        final online = data['desktopOnline'] == true;
+        if (desktopOnline != online) {
+          desktopOnline = online;
+          notifyListeners();
+        }
+        return;
       case 6:
         notice = '收到新的好友申请';
         break;

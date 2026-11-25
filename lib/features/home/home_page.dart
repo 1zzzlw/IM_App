@@ -62,9 +62,16 @@ class _HomePageState extends State<HomePage> {
                                     .headlineMedium,
                               ),
                               const SizedBox(height: 2),
-                              Text(
-                                online ? '连接每一份在意' : '正在连接，稍等一下…',
-                                style: Theme.of(context).textTheme.bodySmall,
+                              Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  online
+                                      ? (app.desktopOnline
+                                            ? '电脑端在线'
+                                            : '连接每一份在意')
+                                      : '正在连接，稍等一下…',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
                               ),
                             ],
                           ),

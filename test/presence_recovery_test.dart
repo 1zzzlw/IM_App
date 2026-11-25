@@ -73,6 +73,17 @@ void main() {
       await online;
       expect(app.onlineUsers, {'200'});
 
+      Future<void> sendDesktopStatus(WebSocket connection, bool online) async {
+        final snapshot = nextFrame(20);
+        connection.add(ImProtocol.encode(20, 0, {'desktopOnline': online}));
+        await snapshot;
+        expect(app.desktopOnline, online);
+      }
+
+      await sendDesktopStatus(connections.first, true);
+      await sendDesktopStatus(connections.first, false);
+      await sendDesktopStatus(connections.first, true);
+
       final lost = socket.states.stream.firstWhere(
         (state) => state == im.ConnectionState.reconnecting,
       );
@@ -81,10 +92,12 @@ void main() {
       await connections.first.close(WebSocketStatus.goingAway);
       await lost;
       expect(app.onlineUsers, isEmpty);
+      expect(app.desktopOnline, isFalse);
       await recovered;
       expect(connections.length, 2);
       expect(app.onlineUsers, isEmpty);
       expect(socket.state, im.ConnectionState.online);
+      await sendDesktopStatus(connections.last, true);
     } finally {
       await forwarded.cancel();
       closing.addAll(connections);
